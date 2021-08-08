@@ -3,12 +3,10 @@ package rdnms;
 import static java.nio.file.StandardOpenOption.*;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -30,14 +28,16 @@ public class DiskManager {
 		this.next_page_id = next_page_id;
 	}
 
-	public DiskManager open(URI heap_file_path) throws IOException {
-		Path path = Paths.get(heap_file_path);
-		Set<PosixFilePermission> permissions = PosixFilePermissions.fromString("rw-rw-rw-");
-		FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(permissions);
+	public static DiskManager open(Path heap_file_path) throws IOException  {
 
-		if(Files.notExists(path, null)) {
-			path = Files.createFile(path, attr);
+		Path path = heap_file_path;
+//		Set<PosixFilePermission> permissions = PosixFilePermissions.fromString("rw-rw-rw-");
+//		FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(permissions);
+
+		if(Files.notExists(path)) {
+			path = Files.createFile(path);
 		}
+
 		return new DiskManager(path);
 	}
 
@@ -47,7 +47,8 @@ public class DiskManager {
 
 		long offset = (long) PAGE_SIZE * page_id;
 
-		try(SeekableByteChannel channel = Files.newByteChannel(heap_file, EnumSet.of(READ), attr)){
+//		try(SeekableByteChannel channel = Files.newByteChannel(heap_file, EnumSet.of(READ), attr)){
+		try(SeekableByteChannel channel = Files.newByteChannel(heap_file)){
 			channel.position(offset).read(bf);
 		}
 	}
@@ -58,7 +59,8 @@ public class DiskManager {
 
 		long offset = (long) PAGE_SIZE * page_id;
 
-		try(SeekableByteChannel channel = Files.newByteChannel(heap_file, EnumSet.of(WRITE), attr)){
+//		try(SeekableByteChannel channel = Files.newByteChannel(heap_file, EnumSet.of(WRITE), attr)){
+		try(SeekableByteChannel channel = Files.newByteChannel(heap_file, EnumSet.of(WRITE))){
 			channel.position(offset).write(bf);
 		}
 	}
